@@ -5,15 +5,35 @@ let currentNumber = "0";
 let storedNumber = null;
 let selectedOperator = null;
 let shouldResetDisplay = false;
+let displayExpression = "0";
 
 function updateDisplay() {
-  display.textContent = currentNumber;
+  display.textContent = displayExpression;
+}
+
+function syncDisplayExpression() {
+  if (selectedOperator) {
+    displayExpression = `${storedNumber}${selectedOperator}${currentNumber}`;
+  } else {
+    displayExpression = currentNumber;
+  }
 }
 
 function inputNumber(value) {
+  if (currentNumber === "エラー") {
+    currentNumber = value === "." ? "0." : value;
+    storedNumber = null;
+    selectedOperator = null;
+    shouldResetDisplay = false;
+    syncDisplayExpression();
+    updateDisplay();
+    return;
+  }
+
   if (shouldResetDisplay) {
     currentNumber = value === "." ? "0." : value;
     shouldResetDisplay = false;
+    syncDisplayExpression();
     updateDisplay();
     return;
   }
@@ -28,6 +48,7 @@ function inputNumber(value) {
     currentNumber += value;
   }
 
+  syncDisplayExpression();
   updateDisplay();
 }
 
@@ -53,14 +74,25 @@ function chooseOperator(operator) {
   if (selectedOperator && !shouldResetDisplay) {
     const result = calculate(storedNumber, currentNumber, selectedOperator);
     currentNumber = String(result);
-    storedNumber = result === "エラー" ? null : currentNumber;
-    updateDisplay();
+
+    if (result === "エラー") {
+      storedNumber = null;
+      selectedOperator = null;
+      shouldResetDisplay = true;
+      syncDisplayExpression();
+      updateDisplay();
+      return;
+    }
+
+    storedNumber = currentNumber;
   } else {
     storedNumber = currentNumber;
   }
 
   selectedOperator = operator;
   shouldResetDisplay = true;
+  displayExpression = `${storedNumber}${selectedOperator}`;
+  updateDisplay();
 }
 
 function showResult() {
@@ -72,6 +104,7 @@ function showResult() {
   selectedOperator = null;
   storedNumber = null;
   shouldResetDisplay = true;
+  syncDisplayExpression();
   updateDisplay();
 }
 
@@ -80,6 +113,7 @@ function clearCalculator() {
   storedNumber = null;
   selectedOperator = null;
   shouldResetDisplay = false;
+  syncDisplayExpression();
   updateDisplay();
 }
 
@@ -90,6 +124,7 @@ function deleteLastDigit() {
     currentNumber = currentNumber.slice(0, -1);
   }
 
+  syncDisplayExpression();
   updateDisplay();
 }
 
